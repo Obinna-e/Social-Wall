@@ -4,34 +4,53 @@ import 'package:social_wall/components/my_button.dart';
 import 'package:social_wall/components/my_textfield.dart';
 import 'package:social_wall/helper/helper_functions.dart';
 
-class LoginPage extends StatefulWidget {
+class RegisterPage extends StatefulWidget {
   final void Function() onTap;
-  LoginPage({super.key, required this.onTap});
+
+  RegisterPage({super.key, required this.onTap});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController usernameController = TextEditingController();
+
   final TextEditingController emailController = TextEditingController();
 
   final TextEditingController passwordController = TextEditingController();
 
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
   // login method
-  void login() async {
+  void registerUser() async {
+    //show loading circle
     showDialog(
-        context: context,
-        builder: (context) => const Center(
-              child: CircularProgressIndicator(),
-            ));
+      context: context,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+    // make passwords match
 
+    if (passwordController.text != confirmPasswordController.text) {
+      Navigator.pop(context);
+      displayMessageToUser("Passwords don't match", context);
+      return;
+    }
+    // try creating the user
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text, password: passwordController.text);
+      // create the user
 
-      if (context.mounted) Navigator.pop(context);
+      UserCredential? userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: emailController.text, password: passwordController.text);
+
+      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
+
       displayMessageToUser(e.code, context);
     }
   }
@@ -62,6 +81,14 @@ class _LoginPageState extends State<LoginPage> {
                 height: 50,
               ),
               MyTextField(
+                hintText: "Username",
+                obscureText: false,
+                controller: usernameController,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              MyTextField(
                 hintText: "Email",
                 obscureText: false,
                 controller: emailController,
@@ -73,6 +100,14 @@ class _LoginPageState extends State<LoginPage> {
                 hintText: "Password",
                 obscureText: true,
                 controller: passwordController,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              MyTextField(
+                hintText: "Confirm Password",
+                obscureText: true,
+                controller: confirmPasswordController,
               ),
               const SizedBox(
                 height: 10,
@@ -92,8 +127,8 @@ class _LoginPageState extends State<LoginPage> {
                 height: 25,
               ),
               MyButton(
-                text: "Login",
-                onTap: login,
+                text: "Register",
+                onTap: registerUser,
               ),
               const SizedBox(
                 height: 25,
@@ -101,10 +136,10 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?"),
+                  const Text("Already have an account?"),
                   GestureDetector(
                     child: const Text(
-                      " Register Here",
+                      " Login Here",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onTap: widget.onTap,
